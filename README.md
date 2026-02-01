@@ -1,10 +1,10 @@
 # Dark Pool / Biotech Catalysts Strategy
 
 ![Dashboard View](screenshots/dashboard.png)
-*Real-time dashboard visualizing Unusual Options Activity vs. Clinical Trial Dates.*
+*Backtester results dashboard view.*
 
 ![Terminal Output](screenshots/terminal_output.png)
-*Python Backtesting Engine processing signals.*
+*Real-time flow/alerts views.*
 
 ## Project Overview
 This project correlates **Institutional Options Flow** (Dark Pools/Block Trades) with **Biotech Clinical Trial Events**. It identifies "silent" institutional positioning—where large money moves into a stock shortly before a catalyst event, despite no public news (SEC filings) being released.
