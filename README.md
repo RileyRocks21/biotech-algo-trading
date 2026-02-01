@@ -4,7 +4,7 @@
 *Backtester results dashboard view.*
 
 ![Terminal Output](screenshots/terminal_output.png)
-*Real-time flow/alerts views.*
+*Real-time flow/alerts views. Note: This is just the UI for now (2026-02-01), need data input in the future*
 
 ## Project Overview
 This project correlates **Institutional Options Flow** (Dark Pools/Block Trades) with **Biotech Clinical Trial Events**. It identifies "silent" institutional positioning—where large money moves into a stock shortly before a catalyst event, despite no public news (SEC filings) being released.
