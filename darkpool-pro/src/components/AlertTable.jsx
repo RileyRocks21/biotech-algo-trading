@@ -1,65 +1,39 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TrendingUp, TrendingDown, Activity } from 'lucide-react';
-
-// Mock dark pool data
-const generateMockSignal = (id) => {
-  const tickers = ['AAPL', 'TSLA', 'NVDA', 'MSFT', 'GOOGL', 'AMZN', 'META', 'SPY', 'QQQ', 'AMD', 'PLTR', 'COIN', 'GME', 'SOFI', 'RIVN'];
-  const types = ['Block Trade', 'Sweep', 'Dark Pool', 'VWAP Cross', 'Midpoint'];
-  const sentiments = ['Bullish', 'Bearish', 'Neutral'];
-  
-  const ticker = tickers[Math.floor(Math.random() * tickers.length)];
-  const price = (Math.random() * 500 + 50).toFixed(2);
-  const size = Math.floor(Math.random() * 500000 + 10000);
-  const type = types[Math.floor(Math.random() * types.length)];
-  const sentiment = sentiments[Math.floor(Math.random() * sentiments.length)];
-  const conviction = Math.floor(Math.random() * 100);
-  const timestamp = new Date().toLocaleTimeString();
-  
-  return { id, ticker, price, size, type, sentiment, conviction, timestamp };
-};
-
-// Generate initial mock data
-const generateInitialData = () => {
-  return Array.from({ length: 25 }, (_, i) => generateMockSignal(i));
-};
-
-const formatSize = (size) => {
-  if (size >= 1000000) return `${(size / 1000000).toFixed(1)}M`;
-  if (size >= 1000) return `${(size / 1000).toFixed(0)}K`;
-  return size;
-};
-
-const formatDollarValue = (price, size) => {
-  const value = price * size;
-  if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
-  if (value >= 1000) return `$${(value / 1000).toFixed(0)}K`;
-  return `$${value.toFixed(0)}`;
-};
+import realSignals from '../assets/signals.json'; // Import our Python-generated signals
 
 export default function AlertTable({ isPro = false }) {
-  const [signals, setSignals] = useState(generateInitialData);
+  const [signals, setSignals] = useState([]);
   
   useEffect(() => {
-    // Simulate real-time data coming in
-    const interval = setInterval(() => {
-      setSignals(prev => {
-        const newSignal = generateMockSignal(Date.now());
-        return [newSignal, ...prev.slice(0, 49)];
-      });
-    }, 3000);
-    
-    return () => clearInterval(interval);
+    // If we have real data, load it reverse chronological (newest first)
+    // The JSON might be empty initially, so fallback
+    if (realSignals && realSignals.length > 0) {
+       // Take the last 50 for the initial view
+       setSignals(realSignals.slice(0, 50).reverse());
+    }
   }, []);
+
+  const formatSize = (size) => {
+    if (size >= 1000000) return `${(size / 1000000).toFixed(1)}M`;
+    if (size >= 1000) return `${(size / 1000).toFixed(0)}K`;
+    return size;
+  };
+
+  const formatDollarValue = (price, size) => {
+    const value = price * size;
+    if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
+    if (value >= 1000) return `$${(value / 1000).toFixed(0)}K`;
+    return `$${value.toFixed(0)}`;
+  };
   
-  // In a real app, you'd use Firestore listener:
-  // useEffect(() => {
-  //   const unsubscribe = onSnapshot(collection(db, 'signals'), (snapshot) => {
-  //     const newSignals = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  //     setSignals(newSignals);
-  //   });
-  //   return () => unsubscribe();
-  // }, []);
+  // Helper to color code sentiment
+  const getSentimentColor = (s) => {
+      if (s === 'Bullish') return 'text-green-400';
+      if (s === 'Bearish') return 'text-red-400';
+      return 'text-gray-400';
+  };
 
   return (
     <div className="flex-1 overflow-hidden flex flex-col">

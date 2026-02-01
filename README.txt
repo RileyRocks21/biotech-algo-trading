@@ -19,5 +19,4 @@ Quick guide to running this thing:
    - Results dump to 'backtest_results.csv' or 'strategy_no_news_results.csv'.
 
 Notes:
-- You need an internet connection for the SEC scraper to work.
 - The fuzzy matching is decent but sometimes matches weird stuff (like "Focus" -> "Ford"). Just double check the logs.

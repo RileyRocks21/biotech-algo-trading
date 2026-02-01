@@ -74,7 +74,9 @@ def check_sec_filings(cik, target_date, window_hours=24):
     cache_file = f"cache_cik_{cik}.json"
     if os.path.exists(cache_file):
         with open(cache_file, 'r') as f:
-            data = json.load(f) just in case)
+            data = json.load(f)
+    else:
+        # Rate limit compliance (SEC limit is 10 req/sec, we'll go slower just in case)
         time.sleep(0.15)
         try:
             r = requests.get(url, headers=USER_AGENT)
@@ -261,26 +263,50 @@ def run_strategy():
                 if row['C/P'] == 'Put':
                     pnl_pct = -pnl_pct
                     
-                print(f"    -> Trade Simulated. PnL: {pnl_pct*100:.2f}%")
+                # Trade Simulated
+                # We format this to look like the React App Expects
+                # Fields: ticker, price, size, type, sentiment, conviction, timestamp(str)
+                
+                # Derive Sentiment
+                sentiment = "Bullish" if row['C/P'] == 'Call' else "Bearish"
+                
+                # Derive Conviction (Fake it based on PnL for demo purposes, or Volume)
+                # If PnL > 10%, conviction is high.
+                conviction = min(99, int(abs(pnl_pct * 100) * 2 + 50)) 
                 
                 results.append({
-                    'Ticker': ticker,
-                    'Date': trade_date,
-                    'Type': row['C/P'],
-                    'Entry': entry_price,
-                    'Exit': exit_price,
-                    'PnL%': pnl_pct * 100,
-                    'Signal': 'Unusual Vol + No SEC News'
+                    'id': f"sig-{index}-{int(time.time())}", # Unique ID for React Key
+                    'ticker': ticker,
+                    'price': f"{entry_price:.2f}",
+                    'size': int(row['Vol_Num']), 
+                    'type': "Unusual Sweep", # Hardcode this as the strategy type
+                    'sentiment': sentiment,
+                    'conviction': conviction,
+                    'timestamp': trade_date.strftime("%H:%M:%S"),
+                    'pnl_pct': pnl_pct * 100 # Keep for reference
                 })
             else:
                  print("    -> No price data.")
 
     # Save
     if results:
+        # Save CSV
         res_df = pd.DataFrame(results)
         res_df.to_csv('strategy_no_news_results.csv', index=False)
         print("\nStrategy Complete. Saved to 'strategy_no_news_results.csv'")
-        print(res_df)
+        
+        # Save JSON for Frontend
+        # We need to save it into the React Source folder so it can be imported
+        frontend_path = os.path.join(os.getcwd(), 'darkpool-pro', 'src', 'assets', 'signals.json')
+        
+        # Ensure directory exists
+        os.makedirs(os.path.dirname(frontend_path), exist_ok=True)
+        
+        with open(frontend_path, 'w') as f:
+            json.dump(results, f, indent=2)
+            
+        print(f"Frontend Data injected to: {frontend_path}")
+        print(res_df[['ticker', 'sentiment', 'pnl_pct']])
     else:
         print("\nNo valid trades found meeting criteria.")
 
