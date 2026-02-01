@@ -1,0 +1,10 @@
+{
+    "holding_period_days": 3,
+    "volume_threshold": 500,
+    "premium_threshold": 10000,
+    "fuzzy_match_threshold": 85,
+    "lookback_days_for_catalyst": 5,
+    "lookforward_days_for_catalyst": 5,
+    "initial_capital": 10000,
+    "trade_size_percent": 0.05
+}

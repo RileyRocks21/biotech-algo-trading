@@ -1,0 +1,29 @@
+### PROJECT SPECS / PROMPT LOG ###
+
+ACT AS: A Senior Full-Stack Engineer specializing in Fintech UIs.
+
+PROJECT GOAL: Build a "Dark Pool Alerts" framework using React 19, Tailwind CSS, and Firebase.
+
+STYLING SPECS:
+- Theme: Ultra-dark trading terminal.
+- Colors: Background (#05070A), Surface (#0F1218), Accent (#00F0FF), Bullish (#00C087), Bearish (#FF3B69).
+- Layout: 
+  1. A "Direct Utility" Landing Page: Show a high-density data table of Dark Pool prints (mock data for now). 
+  2. The bottom 50% of the table must have a CSS 'backdrop-blur' overlay with a Cyan "Unlock Pro Data" CTA button.
+  3. A Sidebar Navigation (Icons only or slim text) with: Feed, Analytics, News, Billing.
+
+FUNCTIONALITY:
+- Use Framer Motion to animate new table rows sliding in from the top.
+- Create a 'signals' Firestore listener. If a signal has a 'conviction' score > 90, highlight the row with a cyan outer glow.
+- Implement a "News Sidebar" on the right that pulls headlines (mocked).
+- Setup Auth logic: Users see the blurred table by default. After login + check for 'isPro' status in Firestore, remove the blur.
+
+COMPONENT STRUCTURE:
+- /components/AlertTable.jsx: Responsive table with Ticker, Price, Size, Type, and Sentiment.
+- /components/BlurWall.jsx: The marketing overlay for the landing page.
+- /components/NewsWidget.jsx: Vertical scrolling news feed.
+
+TECH NOTES:
+- Use Lucide-React for icons.
+- Ensure the table is 'sticky-header' so it feels like a professional terminal.
+- Firebase config is already in src/firebase.js. Use it.

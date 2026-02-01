@@ -1,0 +1,132 @@
+DATA INGESTION SPECIFICATION FOR DARKPOOL PRO
+==============================================
+
+This document outlines the exact data structure and methods required to feed real-time data into the DarkPool Pro frontend.
+
+1. ARCHITECTURE OVERVIEW
+------------------------
+The application is designed to listen to a Google Firebase Firestore database in real-time. 
+Your backend analysis engine (Python/Node.js) should push analyzed data into specific Firestore collections. 
+The React frontend will automatically react to these database changes.
+
+2. FIREBASE SETUP FOR BACKEND
+-----------------------------
+To write data from your backend script, you should use the "Firebase Admin SDK".
+1. Go to Firebase Console > Project Settings > Service Accounts.
+2. Generate a new private key (JSON file).
+3. In your backend script, initialize the app with this credential.
+
+3. DATA SCHEMAS
+---------------
+
+A. DARK POOL SIGNALS (Collection Name: "signals")
+-------------------------------------------------
+Every time your engine detects a trade, write a new document to the "signals" collection.
+
+Field       | Type    | Description
+----------- | ------- | ---------------------------------------------------------
+ticker      | String  | Stock symbol (e.g., "NVDA", "SPY")
+price       | Number  | Execution price (e.g., 124.50)
+size        | Number  | Number of shares (e.g., 500000)
+type        | String  | Trade type (e.g., "Block Trade", "Sweep", "Dark Pool")
+sentiment   | String  | "Bullish", "Bearish", or "Neutral"
+conviction  | Number  | AI Score 0-100 (Scores >90 trigger the cyan glow effect)
+timestamp   | String  | Human readable time (e.g., "10:42:15 AM") or ISO string
+createdAt   | Number  | Server timestamp (Date.now()) for sorting
+
+*Example JSON Payload:*
+{
+  "ticker": "AAPL",
+  "price": 182.50,
+  "size": 150000,
+  "type": "Dark Pool",
+  "sentiment": "Bullish",
+  "conviction": 95,
+  "timestamp": "10:30:00 AM",
+  "createdAt": 1703692200000
+}
+
+B. NEWS FEED (Collection Name: "news")
+--------------------------------------
+Push news headlines here.
+
+Field       | Type    | Description
+----------- | ------- | ---------------------------------------------------------
+headline    | String  | The news title
+ticker      | String  | Related stock symbol
+sentiment   | String  | "bullish" or "bearish" (lowercase preferred by widget)
+source      | String  | Source name (e.g., "Bloomberg", "Reuters")
+time        | String  | Display time (e.g., "2m ago" or ISO string)
+createdAt   | Number  | Server timestamp for sorting
+
+*Example JSON Payload:*
+{
+  "headline": "NVDA breaks all-time high on volume",
+  "ticker": "NVDA",
+  "sentiment": "bullish",
+  "source": "Benzinga",
+  "time": "Just now",
+  "createdAt": 1703692200000
+}
+
+4. FRONTEND INTEGRATION STEPS
+-----------------------------
+Once your backend is writing to these collections, you need to update the React components to listen to them instead of generating mock data.
+
+Step 1: Update src/components/AlertTable.jsx
+Replace the mock data useEffect with this Firestore listener:
+
+```javascript
+import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
+import { db } from '../firebase';
+
+// Inside component...
+useEffect(() => {
+  const q = query(
+    collection(db, 'signals'), 
+    orderBy('createdAt', 'desc'), 
+    limit(50)
+  );
+
+  const unsubscribe = onSnapshot(q, (snapshot) => {
+    const newSignals = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    setSignals(newSignals);
+  });
+
+  return () => unsubscribe();
+}, []);
+```
+
+Step 2: Update src/components/NewsWidget.jsx
+Similar implementation for the news feed:
+
+```javascript
+import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
+import { db } from '../firebase';
+
+// Inside component...
+useEffect(() => {
+  const q = query(
+    collection(db, 'news'), 
+    orderBy('createdAt', 'desc'), 
+    limit(20)
+  );
+
+  const unsubscribe = onSnapshot(q, (snapshot) => {
+    const newNews = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    setNews(newNews);
+  });
+
+  return () => unsubscribe();
+}, []);
+```
+
+5. CLEANUP STRATEGY
+-------------------
+Since high-frequency data can grow large quickly, your backend script should periodically delete documents older than 24 hours from Firestore to save on storage costs.
